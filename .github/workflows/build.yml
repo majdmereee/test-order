@@ -1,0 +1,57 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Rebuild Android Config & Permissions
+        run: |
+          rm -rf android
+          flutter create . --platforms=android
+          
+          # تثبيت إصدار الكوتلن ليتوافق مع الإصدارات الحديثة
+          sed -i -E 's/id "org.jetbrains.kotlin.android" version "[0-9\.]+"/id "org.jetbrains.kotlin.android" version "1.9.22"/g' android/settings.gradle || true
+          sed -i -E "s/ext.kotlin_version = '[^']*'/ext.kotlin_version = '1.9.22'/g" android/build.gradle || true
+          
+          # إضافة صلاحية الإنترنت فقط (لتطبيق الطلبات والمطعم)
+          cat << 'EOF' > fix_manifest.dart
+          import 'dart:io';
+          void main() {
+            var file = File('android/app/src/main/AndroidManifest.xml');
+            var content = file.readAsStringSync();
+            var permissions = '''
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            ''';
+            content = content.replaceFirst('<application', permissions + '<application');
+            file.writeAsStringSync(content);
+          }
+          EOF
+          dart fix_manifest.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restaurant-menu-app
+          path: build/app/outputs/flutter-apk/app-release.apk
