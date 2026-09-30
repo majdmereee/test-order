@@ -20,16 +20,17 @@ jobs:
           flutter-version: '3.19.x'
           channel: 'stable'
 
-      - name: Rebuild Android Config & Permissions
+      - name: Rebuild Android Folder with Valid Package Name
         run: |
           rm -rf android
-          flutter create . --platforms=android
+          # إجبار فلاتر على استخدام test_order كاسم للمشروع وتجاوز اسم المستودع
+          flutter create --project-name=test_order --platforms=android .
           
-          # تثبيت إصدار الكوتلن ليتوافق مع الإصدارات الحديثة
+          # تثبيت إصدار الكوتلن ليتوافق مع أندرويد
           sed -i -E 's/id "org.jetbrains.kotlin.android" version "[0-9\.]+"/id "org.jetbrains.kotlin.android" version "1.9.22"/g' android/settings.gradle || true
           sed -i -E "s/ext.kotlin_version = '[^']*'/ext.kotlin_version = '1.9.22'/g" android/build.gradle || true
           
-          # إضافة صلاحية الإنترنت فقط (لتطبيق الطلبات والمطعم)
+          # إضافة صلاحيات الإنترنت
           cat << 'EOF' > fix_manifest.dart
           import 'dart:io';
           void main() {
@@ -53,5 +54,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: restaurant-menu-app
+          name: restaurant-order-app
           path: build/app/outputs/flutter-apk/app-release.apk
