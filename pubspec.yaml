@@ -1,5 +1,5 @@
 name: restaurant_menu
-description: "Restaurant Digital Menu Ordering App with Telegram Integration"
+description: "Restaurant Digital Menu with Realtime Socket.IO Ordering"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -11,8 +11,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  http: ^1.2.0
   shared_preferences: ^2.2.2
+  socket_io_client: ^2.0.3+1
 
 dev_dependencies:
   flutter_test:
